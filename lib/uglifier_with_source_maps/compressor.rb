@@ -28,9 +28,6 @@ module UglifierWithSourceMaps
       sourcemap_path = File.join(Rails.root, 'tmp', sourcemap_filename)
       unminified_path = File.join(Rails.root, 'tmp', concatenated_filename)
 
-      p sourcemap_path
-      p unminified_path
-      
       FileUtils.mkdir_p File.dirname(sourcemap_path)
       FileUtils.mkdir_p File.dirname(unminified_path)
 
