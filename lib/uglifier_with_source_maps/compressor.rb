@@ -25,18 +25,20 @@ module UglifierWithSourceMaps
       sourcemap_filename    = File.join(Rails.application.config.assets.sourcemaps_prefix, "#{context.logical_path}-#{digest_value}.map")
       concatenated_filename = File.join(Rails.application.config.assets.uncompressed_prefix, "#{context.logical_path}-#{digest_value}.js")
 
-      map = JSON.parse(sourcemap)
-      map['file']    = minified_filename
-      map['sources'] = [concatenated_filename]
-
       sourcemap_path = File.join(Rails.root, 'tmp', sourcemap_filename)
       unminified_path = File.join(Rails.root, 'tmp', concatenated_filename)
+
+      p sourcemap_path
+      p unminified_path
       
       FileUtils.mkdir_p File.dirname(sourcemap_path)
       FileUtils.mkdir_p File.dirname(unminified_path)
 
       # Write sourcemap and uncompressed js
       unless File.exists?(sourcemap_path)
+        map = JSON.parse(sourcemap)
+        map['file']    = minified_filename
+        map['sources'] = [concatenated_filename]
         map['sourcesContent'] = data
         File.open(sourcemap_path, "w") { |f| f.puts map.to_json }
       end
