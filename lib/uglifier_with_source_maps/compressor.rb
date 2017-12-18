@@ -18,25 +18,35 @@ module UglifierWithSourceMaps
 
       minified_data, sourcemap = @uglifier.compile_with_map(data)
 
+      digest_value = digest(minified_data)
+
       # write source map
-      minified_filename     = [Rails.application.config.assets.prefix, "#{context.logical_path}-#{digest(minified_data)}.js"].join('/')
-      sourcemap_filename    = [Rails.application.config.assets.prefix, Rails.application.config.assets.sourcemaps_prefix, "#{context.logical_path}-#{digest(minified_data)}.map"].join('/')
-      concatenated_filename = [Rails.application.config.assets.prefix, Rails.application.config.assets.uncompressed_prefix, "#{context.logical_path}-#{digest(minified_data)}.js"].join('/')
+      minified_filename     = File.join(Rails.application.config.assets.prefix, "#{context.logical_path}-#{digest_value}.js")
+      sourcemap_filename    = File.join(Rails.application.config.assets.sourcemaps_prefix, "#{context.logical_path}-#{digest_value}.map")
+      concatenated_filename = File.join(Rails.application.config.assets.uncompressed_prefix, "#{context.logical_path}-#{digest_value}.js")
 
       map = JSON.parse(sourcemap)
       map['file']    = minified_filename
       map['sources'] = [concatenated_filename]
 
-      FileUtils.mkdir_p File.dirname(File.join(Rails.public_path, sourcemap_filename))
-      FileUtils.mkdir_p File.dirname(File.join(Rails.public_path, concatenated_filename))
+      sourcemap_path = File.join(Rails.root, 'tmp', sourcemap_filename)
+      unminified_path = File.join(Rails.root, 'tmp', concatenated_filename)
+      
+      FileUtils.mkdir_p File.dirname(sourcemap_path)
+      FileUtils.mkdir_p File.dirname(unminified_path)
 
       # Write sourcemap and uncompressed js
-      File.open(File.join(Rails.public_path, sourcemap_filename), "w") { |f| f.puts map.to_json }
-      File.open(File.join(Rails.public_path, concatenated_filename), "w") {|f| f.write(data)}
+      unless File.exists?(sourcemap_path)
+        map['sourcesContent'] = data
+        File.open(sourcemap_path, "w") { |f| f.puts map.to_json }
+      end
 
-      sourcemap_comment = "\n//# sourceMappingURL=#{sourcemap_filename}\n"
+      unless File.exists?(unminified_path)
+        File.open(unminified_path, "w") {|f| f.write(data)}
+      end
 
-      return minified_data + sourcemap_comment
+      # we don't include the source map (we don't want raw sources public, and it screws up the digest of the final js file)
+      return minified_data
     end
 
     def digest(io)
