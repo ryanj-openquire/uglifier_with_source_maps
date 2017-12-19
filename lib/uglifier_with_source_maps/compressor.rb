@@ -36,7 +36,7 @@ module UglifierWithSourceMaps
         map = JSON.parse(sourcemap)
         map['file']    = minified_filename
         map['sources'] = [concatenated_filename]
-        map['sourcesContent'] = data
+        map['sourcesContent'] = [data]
         File.open(sourcemap_path, "w") { |f| f.puts map.to_json }
       end
 
